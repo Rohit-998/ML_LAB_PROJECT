@@ -108,6 +108,30 @@ def main():
             best_acc = acc
             best_model_name = name
 
+    print("\n" + "=" * 60)
+    print("FEATURE IMPORTANCE ANALYSIS")
+    print("=" * 60)
+
+    importance_data = {}
+
+    for name in ["Decision Tree"]:
+        model = models[name]
+        imp = model.feature_importances_
+        importance_data[name] = {f: round(float(v), 4) for f, v in zip(features, imp)}
+        ranked = sorted(zip(features, imp), key=lambda x: x[1], reverse=True)
+        print(f"\n  {name}:")
+        for feat, val in ranked:
+            bar = "#" * int(val * 40)
+            print(f"    {feat:15s} {val:.4f} {bar}")
+
+    from sklearn.inspection import permutation_importance
+    perm_importance_data = {}
+    for name, model in models.items():
+        perm = permutation_importance(model, X_test_sc, y_test, n_repeats=10, random_state=42, n_jobs=-1)
+        perm_importance_data[name] = {
+            f: round(float(v), 4) for f, v in zip(features, perm.importances_mean)
+        }
+
     print(f"\n[BEST] {best_model_name} ({best_acc:.4f})")
 
 
