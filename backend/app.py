@@ -43,3 +43,14 @@ def get_artifacts():
     if ARTIFACTS is None:
         ARTIFACTS = load_artifacts()
     return ARTIFACTS
+
+
+@app.route("/")
+def index():
+    return jsonify({"service": "CropAI API", "ui": "run npm run dev in frontend/ and open http://localhost:3000"})
+
+
+@app.route("/api/health")
+def health():
+    return jsonify({"status": "ok", "models_loaded": len(get_artifacts()["models"])})
+
