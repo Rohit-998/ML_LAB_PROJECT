@@ -40,6 +40,76 @@ def build_models():
     ])
 
 
-if __name__ == "__main__":
+def main():
     df = load_data()
-    print("Data loaded successfully.")
+
+    features = ["N", "P", "K", "temperature", "humidity", "ph", "rainfall"]
+    X = df[features].values
+    y_raw = df["label"].values
+
+    le = LabelEncoder()
+    y = le.fit_transform(y_raw)
+
+    joblib.dump(le, os.path.join(ARTIFACT_DIR, "label_encoder.pkl"))
+
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42, stratify=y
+    )
+
+    scaler = StandardScaler()
+    X_train_sc = scaler.fit_transform(X_train)
+    X_test_sc = scaler.transform(X_test)
+    joblib.dump(scaler, os.path.join(ARTIFACT_DIR, "scaler.pkl"))
+
+    models = build_models()
+    results = {}
+    best_acc = 0
+    best_model_name = ""
+
+    print("\n" + "=" * 60)
+    print("MODEL TRAINING & EVALUATION")
+    print("=" * 60)
+
+    for name, model in models.items():
+        model.fit(X_train_sc, y_train)
+        y_pred = model.predict(X_test_sc)
+
+        acc = accuracy_score(y_test, y_pred)
+        f1 = f1_score(y_test, y_pred, average="weighted")
+        cv_scores = cross_val_score(model, X_train_sc, y_train, cv=5, scoring="accuracy")
+
+        cm = confusion_matrix(y_test, y_pred).tolist()
+
+        report = classification_report(y_test, y_pred, target_names=le.classes_, output_dict=True)
+        per_class = {
+            crop: {
+                "precision": round(report[crop]["precision"], 4),
+                "recall": round(report[crop]["recall"], 4),
+                "f1": round(report[crop]["f1-score"], 4),
+                "support": int(report[crop]["support"]),
+            }
+            for crop in le.classes_
+        }
+
+        results[name] = {
+            "accuracy": round(acc, 4),
+            "f1_weighted": round(f1, 4),
+            "cv_mean": round(cv_scores.mean(), 4),
+            "cv_std": round(cv_scores.std(), 4),
+            "confusion_matrix": cm,
+            "per_class": per_class,
+        }
+
+        print(f"  {name:20s}  Acc={acc:.4f}  F1={f1:.4f}  CV={cv_scores.mean():.4f}+/-{cv_scores.std():.4f}")
+
+        joblib.dump(model, os.path.join(ARTIFACT_DIR, f"model_{name.replace(' ', '_').lower()}.pkl"))
+
+        if acc > best_acc:
+            best_acc = acc
+            best_model_name = name
+
+    print(f"\n[BEST] {best_model_name} ({best_acc:.4f})")
+
+
+if __name__ == "__main__":
+    main()
