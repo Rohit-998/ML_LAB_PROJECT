@@ -54,3 +54,28 @@ def index():
 def health():
     return jsonify({"status": "ok", "models_loaded": len(get_artifacts()["models"])})
 
+
+@app.route("/api/analysis")
+def analysis():
+    arts = get_artifacts()
+    if arts["analysis"] is None:
+        return jsonify({"error": "Run train.py first!"}), 400
+    return jsonify(arts["analysis"])
+
+
+@app.route("/api/models")
+def list_models():
+    arts = get_artifacts()
+    if arts["analysis"] is None:
+        return jsonify({"error": "Run train.py first!"}), 400
+
+    model_list = []
+    for name, res in arts["analysis"]["model_results"].items():
+        model_list.append({
+            "name": name,
+            "accuracy": res["accuracy"],
+            "f1_weighted": res["f1_weighted"],
+            "cv_mean": res["cv_mean"],
+            "cv_std": res["cv_std"],
+        })
+    return jsonify({"models": model_list, "best": arts["analysis"]["best_model"]})
