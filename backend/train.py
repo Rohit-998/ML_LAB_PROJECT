@@ -132,6 +132,38 @@ def main():
             f: round(float(v), 4) for f, v in zip(features, perm.importances_mean)
         }
 
+    print("\n" + "=" * 60)
+    print("ABLATION STUDY")
+    print("=" * 60)
+
+    ablation_results = {}
+    for name, model_template in build_models().items():
+        ablation_results[name] = {"full_accuracy": results[name]["accuracy"]}
+        drops = {}
+        for feat_to_remove in features:
+            remaining = [f for f in features if f != feat_to_remove]
+            idx = [features.index(f) for f in remaining]
+
+            X_train_abl = X_train_sc[:, idx]
+            X_test_abl = X_test_sc[:, idx]
+
+            m = type(model_template)(**model_template.get_params())
+            m.fit(X_train_abl, y_train)
+            y_pred_abl = m.predict(X_test_abl)
+            acc_abl = accuracy_score(y_test, y_pred_abl)
+            drop = results[name]["accuracy"] - acc_abl
+            drops[feat_to_remove] = {
+                "accuracy_without": round(acc_abl, 4),
+                "accuracy_drop": round(drop, 4),
+            }
+        ablation_results[name]["feature_drops"] = drops
+
+        print(f"\n  {name} (full acc = {results[name]['accuracy']:.4f}):")
+        sorted_drops = sorted(drops.items(), key=lambda x: x[1]["accuracy_drop"], reverse=True)
+        for feat, d in sorted_drops:
+            arrow = "v" if d["accuracy_drop"] > 0 else "^"
+            print(f"    Remove {feat:15s} -> {d['accuracy_without']:.4f}  ({arrow} {abs(d['accuracy_drop']):.4f})")
+
     print(f"\n[BEST] {best_model_name} ({best_acc:.4f})")
 
 
