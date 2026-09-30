@@ -143,3 +143,80 @@ plt.xticks(rotation=45, ha='right')
 plt.yticks(rotation=0)
 plt.tight_layout()
 plt.show()
+
+ablation_results = {}
+for name, _ in build_models().items():
+    model_template = build_models()[name]
+    ablation_results[name] = {"full_accuracy": results[name]["accuracy"]}
+    drops = {}
+    for feat in features:
+        remaining = [f for f in features if f != feat]
+        idx = [features.index(f) for f in remaining]
+        X_tr_abl = X_train_sc[:, idx]
+        X_te_abl = X_test_sc[:, idx]
+
+        m = type(model_template)(**model_template.get_params())
+        m.fit(X_tr_abl, y_train)
+        acc_abl = accuracy_score(y_test, m.predict(X_te_abl))
+        drops[feat] = {
+            "accuracy_without": round(acc_abl, 4),
+            "accuracy_drop": round(results[name]["accuracy"] - acc_abl, 4),
+        }
+    ablation_results[name]["feature_drops"] = drops
+
+fig, ax = plt.subplots(figsize=(12, 6))
+model_list = list(ablation_results.keys())
+drop_matrix = np.array([
+    [ablation_results[m]["feature_drops"][f]["accuracy_drop"] * 100 for f in features]
+    for m in model_list
+])
+sns.heatmap(drop_matrix, annot=True, fmt='.2f', cmap='YlOrRd',
+            xticklabels=features, yticklabels=model_list, ax=ax,
+            cbar_kws={'label': 'Accuracy Drop (%)'})
+ax.set_title('Ablation Study - Accuracy Drop When Feature Removed (%)')
+plt.tight_layout()
+plt.show()
+
+fig, axes = plt.subplots(1, 3, figsize=(16, 5))
+for idx, (name, data) in enumerate(ablation_results.items()):
+    ax = axes[idx]
+    sorted_feats = sorted(data["feature_drops"].items(), key=lambda x: x[1]["accuracy_drop"], reverse=True)
+    feat_names = [f[0] for f in sorted_feats]
+    drop_vals = [f[1]["accuracy_drop"] * 100 for f in sorted_feats]
+    colors_bar = ['#ef4444' if d > 2 else '#f59e0b' if d > 0.5 else '#10b981' for d in drop_vals]
+    ax.barh(feat_names, drop_vals, color=colors_bar)
+    ax.set_title(name, fontsize=11, fontweight='bold')
+    ax.set_xlabel("Accuracy Drop (%)")
+    ax.invert_yaxis()
+fig.suptitle("Ablation: Feature Removal Impact per Model", fontsize=14, fontweight='bold')
+plt.tight_layout()
+plt.show()
+
+importance_data = {}
+fig, ax = plt.subplots(figsize=(10, 5))
+imp = models["Decision Tree"].feature_importances_
+importance_data["Decision Tree"] = {f: round(float(v), 4) for f, v in zip(features, imp)}
+sorted_idx = np.argsort(imp)
+ax.barh([features[i] for i in sorted_idx], imp[sorted_idx], color=sns.color_palette("viridis", 7))
+ax.set_title("Decision Tree Feature Importance", fontweight='bold')
+ax.set_xlabel("Importance")
+plt.tight_layout()
+plt.show()
+
+perm_importance_data = {}
+for name, model in models.items():
+    perm = permutation_importance(model, X_test_sc, y_test, n_repeats=10, random_state=42, n_jobs=-1)
+    perm_importance_data[name] = {
+        f: round(float(v), 4) for f, v in zip(features, perm.importances_mean)
+    }
+
+fig, ax = plt.subplots(figsize=(12, 6))
+perm_matrix = np.array([
+    [perm_importance_data[m][f] for f in features]
+    for m in models.keys()
+])
+sns.heatmap(perm_matrix, annot=True, fmt='.4f', cmap='YlGnBu',
+            xticklabels=features, yticklabels=list(models.keys()), ax=ax)
+ax.set_title('Permutation Importance (All Models)')
+plt.tight_layout()
+plt.show()
