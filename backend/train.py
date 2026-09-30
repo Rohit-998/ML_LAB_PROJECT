@@ -164,6 +164,41 @@ def main():
             arrow = "v" if d["accuracy_drop"] > 0 else "^"
             print(f"    Remove {feat:15s} -> {d['accuracy_without']:.4f}  ({arrow} {abs(d['accuracy_drop']):.4f})")
 
+    print("\n" + "=" * 60)
+    print("PCA ANALYSIS")
+    print("=" * 60)
+
+    pca_full = PCA()
+    pca_full.fit(X_train_sc)
+    explained_var = pca_full.explained_variance_ratio_.tolist()
+    cumulative_var = np.cumsum(explained_var).tolist()
+
+    print(f"  Explained variance ratios: {[round(v, 4) for v in explained_var]}")
+    print(f"  Cumulative:                {[round(v, 4) for v in cumulative_var]}")
+
+    pca_2d = PCA(n_components=2)
+    X_pca_2d = pca_2d.fit_transform(X_train_sc)
+
+    pca_accuracy = {}
+    for n_comp in range(1, 8):
+        pca_n = PCA(n_components=n_comp)
+        X_tr_pca = pca_n.fit_transform(X_train_sc)
+        X_te_pca = pca_n.transform(X_test_sc)
+
+        dt = DecisionTreeClassifier(random_state=42)
+        dt.fit(X_tr_pca, y_train)
+        acc_pca = accuracy_score(y_test, dt.predict(X_te_pca))
+        pca_accuracy[n_comp] = round(acc_pca, 4)
+        print(f"  PCA n_components={n_comp}  DT Accuracy={acc_pca:.4f}")
+
+    rng = np.random.RandomState(42)
+    sample_idx = rng.choice(len(X_pca_2d), size=min(500, len(X_pca_2d)), replace=False)
+    pca_scatter = {
+        "x": [round(float(X_pca_2d[i, 0]), 4) for i in sample_idx],
+        "y": [round(float(X_pca_2d[i, 1]), 4) for i in sample_idx],
+        "labels": [le.classes_[y_train[i]] for i in sample_idx],
+    }
+
     print(f"\n[BEST] {best_model_name} ({best_acc:.4f})")
 
 
