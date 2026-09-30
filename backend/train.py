@@ -199,7 +199,42 @@ def main():
         "labels": [le.classes_[y_train[i]] for i in sample_idx],
     }
 
-    print(f"\n[BEST] {best_model_name} ({best_acc:.4f})")
+    dataset_stats = {
+        "feature_names": features,
+        "crop_names": le.classes_.tolist(),
+        "n_samples": len(df),
+        "n_features": len(features),
+        "n_crops": len(le.classes_),
+        "feature_stats": {},
+    }
+    for feat in features:
+        dataset_stats["feature_stats"][feat] = {
+            "mean": round(float(df[feat].mean()), 2),
+            "std": round(float(df[feat].std()), 2),
+            "min": round(float(df[feat].min()), 2),
+            "max": round(float(df[feat].max()), 2),
+        }
+
+    analysis = {
+        "model_results": results,
+        "feature_importance": importance_data,
+        "permutation_importance": perm_importance_data,
+        "ablation_study": ablation_results,
+        "pca": {
+            "explained_variance": [round(v, 4) for v in explained_var],
+            "cumulative_variance": [round(v, 4) for v in cumulative_var],
+            "accuracy_by_components": pca_accuracy,
+            "scatter_2d": pca_scatter,
+        },
+        "dataset_stats": dataset_stats,
+        "best_model": best_model_name,
+    }
+
+    with open(os.path.join(ARTIFACT_DIR, "analysis.json"), "w") as f:
+        json.dump(analysis, f, indent=2)
+
+    print("\n[OK] All models and analysis saved to:", ARTIFACT_DIR)
+    print(f"[BEST] Best model: {best_model_name} ({best_acc:.4f})")
 
 
 if __name__ == "__main__":
