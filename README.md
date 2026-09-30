@@ -62,6 +62,32 @@ npm run dev
 
 Open http://localhost:3000
 
+### Environment variables
+
+| Where | File (local) | Key | Value |
+|-------|--------------|-----|-------|
+| Backend | `backend/.env` | `ALLOWED_ORIGINS` | Frontend origins allowed to call the API, comma-separated |
+| Backend | `backend/.env` | `FLASK_DEBUG` | `1` locally, unset in production |
+| Frontend | `frontend/.env.local` | `NEXT_PUBLIC_API_URL` | Origin of the Flask API, no trailing slash |
+
+Copy each `.env.example` to get started. The real `.env` files are git-ignored.
+
+## Deployment
+
+### Backend on Render (Web Service)
+- **Root directory:** `backend`
+- **Build command:** `pip install -r requirements.txt`
+- **Start command:** `gunicorn app:app` (Render sets `PORT` automatically and gunicorn binds to it; don't add it yourself)
+- **Environment:** `ALLOWED_ORIGINS=https://<your-app>.vercel.app`
+- Python version comes from `backend/.python-version`. The trained models in `backend/models/` are committed, so no training step is needed on deploy.
+
+### Frontend on Vercel
+- **Root directory:** `frontend` (framework preset: Next.js)
+- **Environment:** `NEXT_PUBLIC_API_URL=https://<your-service>.onrender.com`
+- This value is baked in at build time, so redeploy after changing it.
+
+Deploy the backend first, put its URL into Vercel, then put the Vercel URL back into Render's `ALLOWED_ORIGINS`.
+
 ## API Endpoints
 
 - `GET /api/health` — health check

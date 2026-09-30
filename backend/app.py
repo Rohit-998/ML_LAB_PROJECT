@@ -2,11 +2,17 @@ import os
 import json
 import numpy as np
 import joblib
+from dotenv import load_dotenv
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
+load_dotenv()
+
 app = Flask(__name__)
-CORS(app)
+
+# Comma-separated frontend origins allowed to call /api/*, e.g. "https://cropai.vercel.app,http://localhost:3000"
+ALLOWED_ORIGINS = [o.strip().rstrip("/") for o in os.getenv("ALLOWED_ORIGINS", "http://localhost:3000").split(",") if o.strip()]
+CORS(app, resources={r"/api/*": {"origins": ALLOWED_ORIGINS}})
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ARTIFACT_DIR = os.path.join(BASE_DIR, "models")
@@ -149,4 +155,5 @@ if __name__ == "__main__":
     print("Loading artifacts...")
     get_artifacts()
     print(f"Loaded {len(ARTIFACTS['models'])} models.")
-    app.run(debug=True, port=5000)
+    # Local dev server only (defaults to 5000). On Render, `gunicorn app:app` binds to Render's $PORT itself.
+    app.run(debug=os.getenv("FLASK_DEBUG") == "1", port=int(os.getenv("PORT", "5000")))
