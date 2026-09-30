@@ -220,3 +220,100 @@ sns.heatmap(perm_matrix, annot=True, fmt='.4f', cmap='YlGnBu',
 ax.set_title('Permutation Importance (All Models)')
 plt.tight_layout()
 plt.show()
+
+pca_full = PCA()
+pca_full.fit(X_train_sc)
+explained_var = pca_full.explained_variance_ratio_
+cumulative_var = np.cumsum(explained_var)
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
+
+ax1.bar(range(1, 8), explained_var * 100, color='#3b82f6', alpha=0.8, label='Individual')
+ax1.plot(range(1, 8), cumulative_var * 100, 'o-', color='#10b981', linewidth=2, label='Cumulative')
+ax1.set_xlabel("Principal Component")
+ax1.set_ylabel("Variance Explained (%)")
+ax1.set_title("PCA Explained Variance")
+ax1.legend()
+ax1.axhline(y=95, color='red', linestyle='--', alpha=0.5, label='95% threshold')
+
+pca_accuracy = {}
+for n_comp in range(1, 8):
+    pca_n = PCA(n_components=n_comp)
+    X_tr_pca = pca_n.fit_transform(X_train_sc)
+    X_te_pca = pca_n.transform(X_test_sc)
+    dt = DecisionTreeClassifier(random_state=42)
+    dt.fit(X_tr_pca, y_train)
+    pca_accuracy[n_comp] = round(accuracy_score(y_test, dt.predict(X_te_pca)), 4)
+
+ax2.plot(list(pca_accuracy.keys()), [v * 100 for v in pca_accuracy.values()],
+         'o-', color='#8b5cf6', linewidth=2, markersize=8)
+ax2.set_xlabel("Number of PCA Components")
+ax2.set_ylabel("Accuracy (%)")
+ax2.set_title("DT Accuracy vs. PCA Components")
+ax2.set_xticks(range(1, 8))
+plt.tight_layout()
+plt.show()
+
+pca_2d = PCA(n_components=2)
+X_pca_2d = pca_2d.fit_transform(X_train_sc)
+
+plt.figure(figsize=(12, 10))
+for i, crop in enumerate(le.classes_):
+    mask = y_train == i
+    plt.scatter(X_pca_2d[mask, 0], X_pca_2d[mask, 1], label=crop, alpha=0.6, s=20)
+plt.xlabel(f"PC1 ({pca_2d.explained_variance_ratio_[0]*100:.1f}%)")
+plt.ylabel(f"PC2 ({pca_2d.explained_variance_ratio_[1]*100:.1f}%)")
+plt.title("PCA 2D Visualization of Training Data")
+plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', fontsize=9)
+plt.tight_layout()
+plt.show()
+
+rng = np.random.RandomState(42)
+sample_idx = rng.choice(len(X_pca_2d), size=min(500, len(X_pca_2d)), replace=False)
+pca_scatter = {
+    "x": [round(float(X_pca_2d[i, 0]), 4) for i in sample_idx],
+    "y": [round(float(X_pca_2d[i, 1]), 4) for i in sample_idx],
+    "labels": [le.classes_[y_train[i]] for i in sample_idx],
+}
+
+dataset_stats = {
+    "feature_names": features,
+    "crop_names": le.classes_.tolist(),
+    "n_samples": len(df),
+    "n_features": len(features),
+    "n_crops": len(le.classes_),
+    "feature_stats": {
+        feat: {
+            "mean": round(float(df[feat].mean()), 2),
+            "std": round(float(df[feat].std()), 2),
+            "min": round(float(df[feat].min()), 2),
+            "max": round(float(df[feat].max()), 2),
+        }
+        for feat in features
+    },
+}
+
+analysis = {
+    "model_results": results,
+    "feature_importance": importance_data,
+    "permutation_importance": perm_importance_data,
+    "ablation_study": ablation_results,
+    "pca": {
+        "explained_variance": [round(float(v), 4) for v in explained_var],
+        "cumulative_variance": [round(float(v), 4) for v in cumulative_var],
+        "accuracy_by_components": pca_accuracy,
+        "scatter_2d": pca_scatter,
+    },
+    "dataset_stats": dataset_stats,
+    "best_model": best_model_name,
+}
+
+with open(os.path.join(MODEL_DIR, "analysis.json"), "w") as f:
+    json.dump(analysis, f, indent=2)
+
+print("All models saved to:", MODEL_DIR)
+print(f"Best model: {best_model_name} ({best_acc:.4f})")
+print("\nFiles saved:")
+for f in os.listdir(MODEL_DIR):
+    size = os.path.getsize(os.path.join(MODEL_DIR, f))
+    print(f"  {f:40s} {size:>10,} bytes")
