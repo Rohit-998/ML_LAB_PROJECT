@@ -79,3 +79,74 @@ def list_models():
             "cv_std": res["cv_std"],
         })
     return jsonify({"models": model_list, "best": arts["analysis"]["best_model"]})
+
+
+MODEL_KEY_MAP = {
+    "Naive Bayes": "naive_bayes",
+    "Decision Tree": "decision_tree",
+    "KNN": "knn",
+}
+
+
+@app.route("/api/predict", methods=["POST"])
+def predict():
+    arts = get_artifacts()
+    data = request.get_json()
+
+    required = ["N", "P", "K", "temperature", "humidity", "ph", "rainfall"]
+    for field in required:
+        if field not in data:
+            return jsonify({"error": f"Missing field: {field}"}), 400
+
+    try:
+        features = np.array([[
+            float(data["N"]),
+            float(data["P"]),
+            float(data["K"]),
+            float(data["temperature"]),
+            float(data["humidity"]),
+            float(data["ph"]),
+            float(data["rainfall"]),
+        ]])
+    except (ValueError, TypeError) as e:
+        return jsonify({"error": f"Invalid input: {e}"}), 400
+
+    features_sc = arts["scaler"].transform(features)
+
+    model_name = data.get("model", "Naive Bayes")
+    model_key = MODEL_KEY_MAP.get(model_name)
+    if not model_key or model_key not in arts["models"]:
+        return jsonify({"error": f"Unknown model: {model_name}"}), 400
+
+    model = arts["models"][model_key]
+    pred = model.predict(features_sc)[0]
+    crop = arts["label_encoder"].inverse_transform([pred])[0]
+
+    probabilities = {}
+    if hasattr(model, "predict_proba"):
+        probs = model.predict_proba(features_sc)[0]
+        classes = arts["label_encoder"].classes_
+        prob_dict = {c: round(float(p), 4) for c, p in zip(classes, probs)}
+        sorted_probs = sorted(prob_dict.items(), key=lambda x: x[1], reverse=True)[:5]
+        probabilities = dict(sorted_probs)
+
+    all_predictions = {}
+    for display_name, key in MODEL_KEY_MAP.items():
+        if key in arts["models"]:
+            m = arts["models"][key]
+            p = m.predict(features_sc)[0]
+            all_predictions[display_name] = arts["label_encoder"].inverse_transform([p])[0]
+
+    return jsonify({
+        "crop": crop,
+        "model_used": model_name,
+        "probabilities": probabilities,
+        "all_model_predictions": all_predictions,
+    })
+
+
+if __name__ == "__main__":
+    print("Loading artifacts...")
+    get_artifacts()
+    print(f"Loaded {len(ARTIFACTS['models'])} models.")
+    app.run(debug=True, port=5000)
