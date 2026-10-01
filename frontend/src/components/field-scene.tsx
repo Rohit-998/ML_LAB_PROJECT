@@ -19,6 +19,17 @@ const pollen = Array.from({ length: 34 }, (_, i) => ({
   o: String(r2(.3 + rand(i + 1100) * .5)),
 }));
 
+const birds = Array.from({ length: 8 }, (_, i) => ({
+  sz: `${Math.round(12 + rand(i + 2000) * 18)}px`,
+  flyDur: `${r2(22 + rand(i + 2100) * 26)}s`,
+  flyDelay: `${r2(-rand(i + 2200) * 50)}s`,
+  y: `${r2(5 + rand(i + 2300) * 28)}%`,
+  flapDur: `${r2(.35 + rand(i + 2400) * .3)}s`,
+  o: String(r2(.35 + rand(i + 2500) * .35)),
+  driftY: `${Math.round(-15 + rand(i + 2600) * -40)}px`,
+  color: `rgba(20,20,18,${r2(.4 + rand(i + 2700) * .35)})`,
+}));
+
 export function FieldScene() {
   const root = useRef<HTMLDivElement>(null);
   const photo = useRef<HTMLDivElement>(null);
@@ -46,6 +57,9 @@ export function FieldScene() {
     </div>
     <div className="scene-shade" />
     <div className="scene-dusk" />
+    <div className="birds-layer">
+      {birds.map((b, i) => <span key={i} className="bird" style={{ "--sz": b.sz, "--fly-dur": b.flyDur, "--fly-delay": b.flyDelay, "--bird-y": b.y, "--flap-dur": b.flapDur, "--bird-o": b.o, "--drift-y": b.driftY, "--bird-color": b.color } as React.CSSProperties} />)}
+    </div>
     <div className="drift">
       {pollen.map((p, i) => <span key={i} className="pollen" style={{ left: p.left, width: p.size, height: p.size, animationDuration: p.dur, animationDelay: p.delay, "--dx": p.dx, "--o": p.o } as React.CSSProperties} />)}
     </div>

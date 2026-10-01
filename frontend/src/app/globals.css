@@ -63,6 +63,58 @@ html.lenis, html.lenis body { height: auto; }
 [data-paused] .pollen { animation-play-state: paused; }
 @media (max-width: 680px) { .pollen:nth-child(n + 14) { display: none; } }
 
+/* ── Birds ─────────────────────────────────────────────── */
+.birds-layer { position: fixed; inset: 0; z-index: -8; pointer-events: none; overflow: hidden; }
+.bird {
+  position: absolute;
+  width: var(--sz, 18px); height: var(--sz, 18px);
+  animation: flyAcross var(--fly-dur, 28s) linear infinite;
+  animation-delay: var(--fly-delay, 0s);
+  top: var(--bird-y, 12%);
+  opacity: 0;
+}
+.bird::before, .bird::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 50%; height: 2px;
+  background: var(--bird-color, #1a1a1a88);
+  border-radius: 2px;
+  transform-origin: 100% 50%;
+  animation: flap var(--flap-dur, .45s) ease-in-out infinite alternate;
+}
+.bird::before { right: 50%; transform-origin: 100% 50%; }
+.bird::after  { left: 50%; transform-origin: 0% 50%; }
+.bird::before { transform: rotate(calc(-1 * var(--flap-angle, 30deg))); }
+.bird::after  { transform: rotate(var(--flap-angle, 30deg)); }
+
+@keyframes flap {
+  0%   { --flap-angle: 30deg; }
+  100% { --flap-angle: -18deg; }
+}
+/* Fallback for browsers without @property — use a simpler approach */
+.bird::before { animation: flapLeft var(--flap-dur, .45s) ease-in-out infinite alternate; }
+.bird::after  { animation: flapRight var(--flap-dur, .45s) ease-in-out infinite alternate; }
+@keyframes flapLeft {
+  0%   { transform: rotate(-30deg); }
+  100% { transform: rotate(18deg); }
+}
+@keyframes flapRight {
+  0%   { transform: rotate(30deg); }
+  100% { transform: rotate(-18deg); }
+}
+
+@keyframes flyAcross {
+  0%   { left: -6%; opacity: 0; }
+  3%   { opacity: var(--bird-o, .55); }
+  85%  { opacity: var(--bird-o, .55); }
+  100% { left: 108%; opacity: 0; transform: translateY(var(--drift-y, -30px)); }
+}
+
+[data-paused] .bird { animation-play-state: paused; }
+[data-paused] .bird::before, [data-paused] .bird::after { animation-play-state: paused; }
+@media (max-width: 680px) { .bird:nth-child(n + 5) { display: none; } }
+
 /* ── Glass ─────────────────────────────────────────────── */
 .glass {
   background: #1f3a2d50;
