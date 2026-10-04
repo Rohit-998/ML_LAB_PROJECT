@@ -38,9 +38,7 @@ def inspect_and_clean(df):
     NUMERICAL_COLS = ["N", "P", "K", "temperature", "humidity", "ph", "rainfall"]
     rows_before = len(df)
 
-    # ------------------------------------------------------------------ #
-    # 1. DATASET OVERVIEW                                                  #
-    # ------------------------------------------------------------------ #
+   
     print("\n" + "=" * 60)
     print("DATASET OVERVIEW")
     print("=" * 60)
@@ -50,9 +48,6 @@ def inspect_and_clean(df):
     for col, dtype in df.dtypes.items():
         print(f"    {col:15s} : {dtype}")
 
-    # ------------------------------------------------------------------ #
-    # 2. MISSING VALUES                                                    #
-    # ------------------------------------------------------------------ #
     print("\n" + "=" * 60)
     print("MISSING VALUES")
     print("=" * 60)
@@ -63,13 +58,10 @@ def inspect_and_clean(df):
         print("  Missing value counts per column:")
         for col, cnt in missing[missing > 0].items():
             print(f"    {col:15s} : {cnt}")
-        # Drop rows with missing values in feature/label columns
+      
         df = df.dropna(subset=NUMERICAL_COLS + ["label"])
         print(f"  Rows dropped due to missing values: {rows_before - len(df)}")
 
-    # ------------------------------------------------------------------ #
-    # 3. DUPLICATE ROWS                                                    #
-    # ------------------------------------------------------------------ #
     print("\n" + "=" * 60)
     print("DUPLICATES")
     print("=" * 60)
@@ -81,17 +73,12 @@ def inspect_and_clean(df):
         df = df.drop_duplicates()
         print(f"  Duplicate rows removed: {n_dupes}")
 
-    # ------------------------------------------------------------------ #
-    # 4. STATISTICAL SUMMARY                                               #
-    # ------------------------------------------------------------------ #
+
     print("\n" + "=" * 60)
     print("STATISTICAL SUMMARY")
     print("=" * 60)
     print(df[NUMERICAL_COLS].describe().to_string())
 
-    # ------------------------------------------------------------------ #
-    # 5. CLASS DISTRIBUTION                                                #
-    # ------------------------------------------------------------------ #
     print("\n" + "=" * 60)
     print("CLASS DISTRIBUTION")
     print("=" * 60)
@@ -105,9 +92,7 @@ def inspect_and_clean(df):
     else:
         print(f"  => Classes are imbalanced (min={min_c}, max={max_c}).")
 
-    # ------------------------------------------------------------------ #
-    # 6. INVALID / IMPOSSIBLE VALUES                                       #
-    # ------------------------------------------------------------------ #
+
     print("\n" + "=" * 60)
     print("INVALID VALUES")
     print("=" * 60)
@@ -142,9 +127,6 @@ def inspect_and_clean(df):
         df = df[~invalid_mask]
         print(f"  Total rows removed due to invalid values: {n_inv_rows}")
 
-    # ------------------------------------------------------------------ #
-    # 7. OUTLIER INSPECTION (IQR method — report only, do NOT delete)      #
-    # ------------------------------------------------------------------ #
     print("\n" + "=" * 60)
     print("OUTLIER INSPECTION (IQR method — report only)")
     print("=" * 60)
@@ -159,9 +141,6 @@ def inspect_and_clean(df):
               f"[IQR fence: {lower:.2f} to {upper:.2f}]")
     print("  => Outliers are noted but NOT removed (legitimate crop data).")
 
-    # ------------------------------------------------------------------ #
-    # 8. DATA CLEANING SUMMARY                                             #
-    # ------------------------------------------------------------------ #
     rows_after = len(df)
     print("\n" + "=" * 60)
     print("DATA CLEANING SUMMARY")
@@ -185,9 +164,7 @@ def build_models():
 def main():
     df = load_data()
 
-    # ── EDA + Data Cleaning (inserted before any splitting or scaling) ──
     df = inspect_and_clean(df)
-    # ───────────────────────────────────────────────────────────────────
 
     features = ["N", "P", "K", "temperature", "humidity", "ph", "rainfall"]
     X = df[features].values
