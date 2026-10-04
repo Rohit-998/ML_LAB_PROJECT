@@ -671,10 +671,10 @@
       }
     },
     "Decision Tree": {
-      "accuracy": 0.9795,
-      "f1_weighted": 0.9794,
-      "cv_mean": 0.9847,
-      "cv_std": 0.0071,
+      "accuracy": 0.9636,
+      "f1_weighted": 0.9639,
+      "cv_mean": 0.9761,
+      "cv_std": 0.0069,
       "confusion_matrix": [
         [
           20,
@@ -727,7 +727,7 @@
         [
           0,
           0,
-          16,
+          18,
           0,
           0,
           0,
@@ -735,7 +735,7 @@
           0,
           0,
           0,
-          2,
+          0,
           1,
           0,
           1,
@@ -877,7 +877,7 @@
           0,
           0,
           0,
-          19,
+          20,
           0,
           0,
           0,
@@ -889,7 +889,7 @@
           0,
           0,
           0,
-          1,
+          0,
           0
         ],
         [
@@ -949,10 +949,10 @@
           0,
           0,
           0,
+          8,
           0,
           0,
-          0,
-          20,
+          12,
           0,
           0,
           0,
@@ -1165,7 +1165,7 @@
           0,
           0,
           0,
-          1,
+          3,
           0,
           0,
           0,
@@ -1177,7 +1177,7 @@
           0,
           0,
           0,
-          19,
+          17,
           0
         ],
         [
@@ -1220,8 +1220,8 @@
         },
         "blackgram": {
           "precision": 1.0,
-          "recall": 0.8,
-          "f1": 0.8889,
+          "recall": 0.9,
+          "f1": 0.9474,
           "support": 20
         },
         "chickpea": {
@@ -1255,9 +1255,9 @@
           "support": 20
         },
         "jute": {
-          "precision": 0.95,
-          "recall": 0.95,
-          "f1": 0.95,
+          "precision": 0.6452,
+          "recall": 1.0,
+          "f1": 0.7843,
           "support": 20
         },
         "kidneybeans": {
@@ -1267,15 +1267,15 @@
           "support": 20
         },
         "lentil": {
-          "precision": 0.8571,
+          "precision": 0.9474,
           "recall": 0.9,
-          "f1": 0.878,
+          "f1": 0.9231,
           "support": 20
         },
         "maize": {
-          "precision": 0.9524,
-          "recall": 1.0,
-          "f1": 0.9756,
+          "precision": 0.9231,
+          "recall": 0.6,
+          "f1": 0.7273,
           "support": 20
         },
         "mango": {
@@ -1327,9 +1327,9 @@
           "support": 20
         },
         "rice": {
-          "precision": 0.95,
-          "recall": 0.95,
-          "f1": 0.95,
+          "precision": 1.0,
+          "recall": 0.85,
+          "f1": 0.9189,
           "support": 20
         },
         "watermelon": {
@@ -2013,13 +2013,13 @@
   },
   "feature_importance": {
     "Decision Tree": {
-      "N": 0.0988,
-      "P": 0.225,
-      "K": 0.1108,
-      "temperature": 0.0544,
-      "humidity": 0.1493,
-      "ph": 0.0074,
-      "rainfall": 0.3543
+      "N": 0.1445,
+      "P": 0.2305,
+      "K": 0.1006,
+      "temperature": 0.0035,
+      "humidity": 0.1547,
+      "ph": 0.0,
+      "rainfall": 0.3662
     }
   },
   "permutation_importance": {
@@ -2033,13 +2033,13 @@
       "rainfall": 0.3589
     },
     "Decision Tree": {
-      "N": 0.18,
-      "P": 0.477,
-      "K": 0.1445,
-      "temperature": 0.1136,
-      "humidity": 0.5466,
-      "ph": 0.0084,
-      "rainfall": 0.4145
+      "N": 0.2425,
+      "P": 0.4609,
+      "K": 0.1148,
+      "temperature": 0.0132,
+      "humidity": 0.55,
+      "ph": 0.0,
+      "rainfall": 0.4434
     },
     "KNN": {
       "N": 0.3091,
@@ -2086,35 +2086,35 @@
       }
     },
     "Decision Tree": {
-      "full_accuracy": 0.9795,
+      "full_accuracy": 0.9636,
       "feature_drops": {
         "N": {
-          "accuracy_without": 0.9727,
-          "accuracy_drop": 0.0068
+          "accuracy_without": 0.9705,
+          "accuracy_drop": -0.0069
         },
         "P": {
-          "accuracy_without": 0.9795,
-          "accuracy_drop": -0.0
+          "accuracy_without": 0.975,
+          "accuracy_drop": -0.0114
         },
         "K": {
-          "accuracy_without": 0.9795,
-          "accuracy_drop": -0.0
+          "accuracy_without": 0.9409,
+          "accuracy_drop": 0.0227
         },
         "temperature": {
-          "accuracy_without": 0.9818,
-          "accuracy_drop": -0.0023
+          "accuracy_without": 0.9636,
+          "accuracy_drop": -0.0
         },
         "humidity": {
           "accuracy_without": 0.9591,
-          "accuracy_drop": 0.0204
-        },
-        "ph": {
-          "accuracy_without": 0.975,
           "accuracy_drop": 0.0045
         },
+        "ph": {
+          "accuracy_without": 0.9636,
+          "accuracy_drop": -0.0
+        },
         "rainfall": {
-          "accuracy_without": 0.9568,
-          "accuracy_drop": 0.0227
+          "accuracy_without": 0.9659,
+          "accuracy_drop": -0.0023
         }
       }
     },
