@@ -32,16 +32,162 @@ def load_data():
     return df
 
 
+def inspect_and_clean(df):
+    """Perform basic EDA and data cleaning. Returns the cleaned DataFrame."""
+
+    NUMERICAL_COLS = ["N", "P", "K", "temperature", "humidity", "ph", "rainfall"]
+    rows_before = len(df)
+
+    # ------------------------------------------------------------------ #
+    # 1. DATASET OVERVIEW                                                  #
+    # ------------------------------------------------------------------ #
+    print("\n" + "=" * 60)
+    print("DATASET OVERVIEW")
+    print("=" * 60)
+    print(f"  Shape       : {df.shape[0]} rows x {df.shape[1]} columns")
+    print(f"  Columns     : {list(df.columns)}")
+    print("\n  Data Types:")
+    for col, dtype in df.dtypes.items():
+        print(f"    {col:15s} : {dtype}")
+
+    # ------------------------------------------------------------------ #
+    # 2. MISSING VALUES                                                    #
+    # ------------------------------------------------------------------ #
+    print("\n" + "=" * 60)
+    print("MISSING VALUES")
+    print("=" * 60)
+    missing = df.isnull().sum()
+    if missing.sum() == 0:
+        print("  No missing values found.")
+    else:
+        print("  Missing value counts per column:")
+        for col, cnt in missing[missing > 0].items():
+            print(f"    {col:15s} : {cnt}")
+        # Drop rows with missing values in feature/label columns
+        df = df.dropna(subset=NUMERICAL_COLS + ["label"])
+        print(f"  Rows dropped due to missing values: {rows_before - len(df)}")
+
+    # ------------------------------------------------------------------ #
+    # 3. DUPLICATE ROWS                                                    #
+    # ------------------------------------------------------------------ #
+    print("\n" + "=" * 60)
+    print("DUPLICATES")
+    print("=" * 60)
+    n_dupes = df.duplicated().sum()
+    if n_dupes == 0:
+        print("  No duplicate rows found.")
+    else:
+        print(f"  Duplicate rows found: {n_dupes}")
+        df = df.drop_duplicates()
+        print(f"  Duplicate rows removed: {n_dupes}")
+
+    # ------------------------------------------------------------------ #
+    # 4. STATISTICAL SUMMARY                                               #
+    # ------------------------------------------------------------------ #
+    print("\n" + "=" * 60)
+    print("STATISTICAL SUMMARY")
+    print("=" * 60)
+    print(df[NUMERICAL_COLS].describe().to_string())
+
+    # ------------------------------------------------------------------ #
+    # 5. CLASS DISTRIBUTION                                                #
+    # ------------------------------------------------------------------ #
+    print("\n" + "=" * 60)
+    print("CLASS DISTRIBUTION")
+    print("=" * 60)
+    class_counts = df["label"].value_counts().sort_index()
+    print("  Samples per crop label:")
+    for crop, count in class_counts.items():
+        print(f"    {crop:20s} : {count}")
+    min_c, max_c = class_counts.min(), class_counts.max()
+    if max_c - min_c <= 0.1 * max_c:
+        print("  => Classes are approximately balanced.")
+    else:
+        print(f"  => Classes are imbalanced (min={min_c}, max={max_c}).")
+
+    # ------------------------------------------------------------------ #
+    # 6. INVALID / IMPOSSIBLE VALUES                                       #
+    # ------------------------------------------------------------------ #
+    print("\n" + "=" * 60)
+    print("INVALID VALUES")
+    print("=" * 60)
+
+    invalid_mask = pd.Series([False] * len(df), index=df.index)
+
+    checks = {
+        "N"          : (df["N"]           < 0,  "N < 0 (negative nutrient)"),
+        "P"          : (df["P"]           < 0,  "P < 0 (negative nutrient)"),
+        "K"          : (df["K"]           < 0,  "K < 0 (negative nutrient)"),
+        "temperature": ((df["temperature"] < -10) | (df["temperature"] > 60),
+                        "temperature outside [-10, 60] °C"),
+        "humidity"   : ((df["humidity"]    < 0)  | (df["humidity"]    > 100),
+                        "humidity outside [0, 100] %"),
+        "ph"         : ((df["ph"]          < 0)  | (df["ph"]          > 14),
+                        "pH outside [0, 14]"),
+        "rainfall"   : (df["rainfall"]    < 0,   "rainfall < 0 (negative)"),
+    }
+
+    any_invalid = False
+    for col, (mask, desc) in checks.items():
+        n_inv = mask.sum()
+        if n_inv > 0:
+            print(f"  {col:15s} : {n_inv} record(s) with {desc}")
+            invalid_mask |= mask
+            any_invalid = True
+
+    if not any_invalid:
+        print("  No clearly invalid/impossible values found.")
+    else:
+        n_inv_rows = invalid_mask.sum()
+        df = df[~invalid_mask]
+        print(f"  Total rows removed due to invalid values: {n_inv_rows}")
+
+    # ------------------------------------------------------------------ #
+    # 7. OUTLIER INSPECTION (IQR method — report only, do NOT delete)      #
+    # ------------------------------------------------------------------ #
+    print("\n" + "=" * 60)
+    print("OUTLIER INSPECTION (IQR method — report only)")
+    print("=" * 60)
+    for col in NUMERICAL_COLS:
+        Q1  = df[col].quantile(0.25)
+        Q3  = df[col].quantile(0.75)
+        IQR = Q3 - Q1
+        lower = Q1 - 1.5 * IQR
+        upper = Q3 + 1.5 * IQR
+        n_outliers = ((df[col] < lower) | (df[col] > upper)).sum()
+        print(f"  {col:15s} : {n_outliers:4d} potential outlier(s)  "
+              f"[IQR fence: {lower:.2f} to {upper:.2f}]")
+    print("  => Outliers are noted but NOT removed (legitimate crop data).")
+
+    # ------------------------------------------------------------------ #
+    # 8. DATA CLEANING SUMMARY                                             #
+    # ------------------------------------------------------------------ #
+    rows_after = len(df)
+    print("\n" + "=" * 60)
+    print("DATA CLEANING SUMMARY")
+    print("=" * 60)
+    print(f"  Rows before cleaning : {rows_before}")
+    print(f"  Rows after  cleaning : {rows_after}")
+    print(f"  Rows removed         : {rows_before - rows_after}")
+    print("=" * 60 + "\n")
+
+    return df
+
+
 def build_models():
     return OrderedDict([
         ("Naive Bayes", GaussianNB()),
-        ("Decision Tree", DecisionTreeClassifier(random_state=42)),
+        ("Decision Tree", DecisionTreeClassifier(random_state=42, max_depth=10)),
         ("KNN", KNeighborsClassifier(n_neighbors=5)),
     ])
 
 
 def main():
     df = load_data()
+
+    # ── EDA + Data Cleaning (inserted before any splitting or scaling) ──
+    df = inspect_and_clean(df)
+    # ───────────────────────────────────────────────────────────────────
 
     features = ["N", "P", "K", "temperature", "humidity", "ph", "rainfall"]
     X = df[features].values
