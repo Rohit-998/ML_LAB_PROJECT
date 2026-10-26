@@ -20,6 +20,7 @@ from sklearn.inspection import permutation_importance
 from sklearn.naive_bayes import GaussianNB
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.ensemble import RandomForestClassifier
 
 warnings.filterwarnings("ignore")
 sns.set_style("darkgrid")
@@ -74,6 +75,7 @@ def build_models():
         ("Naive Bayes", GaussianNB()),
         ("Decision Tree", DecisionTreeClassifier(random_state=42)),
         ("KNN", KNeighborsClassifier(n_neighbors=5)),
+        ("Random Forest", RandomForestClassifier(n_estimators=100, random_state=42)),
     ])
 
 models = build_models()
@@ -177,7 +179,7 @@ ax.set_title('Ablation Study - Accuracy Drop When Feature Removed (%)')
 plt.tight_layout()
 plt.show()
 
-fig, axes = plt.subplots(1, 3, figsize=(16, 5))
+fig, axes = plt.subplots(1, len(ablation_results), figsize=(4.5 * len(ablation_results), 5))
 for idx, (name, data) in enumerate(ablation_results.items()):
     ax = axes[idx]
     sorted_feats = sorted(data["feature_drops"].items(), key=lambda x: x[1]["accuracy_drop"], reverse=True)
