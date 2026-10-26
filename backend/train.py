@@ -16,6 +16,7 @@ from sklearn.metrics import (
 from sklearn.naive_bayes import GaussianNB
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.ensemble import RandomForestClassifier
 
 warnings.filterwarnings("ignore")
 
@@ -158,6 +159,7 @@ def build_models():
         ("Naive Bayes", GaussianNB()),
         ("Decision Tree", DecisionTreeClassifier(random_state=42, max_depth=10)),
         ("KNN", KNeighborsClassifier(n_neighbors=5)),
+        ("Random Forest", RandomForestClassifier(n_estimators=100, random_state=42)),
     ])
 
 

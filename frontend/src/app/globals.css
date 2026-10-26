@@ -23,6 +23,7 @@
   --model-nb: #b98314;
   --model-dt: #3f8fd0;
   --model-knn: #c9607f;
+  --model-rf: #2ea043;
 }
 
 * { box-sizing: border-box; }

@@ -31,7 +31,7 @@ def load_artifacts():
     artifacts["scaler"] = joblib.load(os.path.join(ARTIFACT_DIR, "scaler.pkl"))
     artifacts["label_encoder"] = joblib.load(os.path.join(ARTIFACT_DIR, "label_encoder.pkl"))
 
-    model_names = ["naive_bayes", "decision_tree", "knn"]
+    model_names = ["naive_bayes", "decision_tree", "knn", "random_forest"]
     artifacts["models"] = {}
     for mname in model_names:
         path = os.path.join(ARTIFACT_DIR, f"model_{mname}.pkl")
@@ -91,6 +91,7 @@ MODEL_KEY_MAP = {
     "Naive Bayes": "naive_bayes",
     "Decision Tree": "decision_tree",
     "KNN": "knn",
+    "Random Forest": "random_forest",
 }
 
 

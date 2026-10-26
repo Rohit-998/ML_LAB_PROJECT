@@ -1,5 +1,5 @@
 export type FeatureKey = "N" | "P" | "K" | "temperature" | "humidity" | "ph" | "rainfall";
-export type ModelName = "Naive Bayes" | "Decision Tree" | "KNN";
+export type ModelName = "Naive Bayes" | "Decision Tree" | "KNN" | "Random Forest";
 export type FieldInput = Record<FeatureKey, number>;
 
 export interface ModelResult {

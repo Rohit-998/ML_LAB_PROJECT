@@ -1,17 +1,19 @@
 import type { FeatureKey, FieldInput, ModelName } from "@/types";
 
-export const MODELS: ModelName[] = ["Naive Bayes", "Decision Tree", "KNN"];
+export const MODELS: ModelName[] = ["Naive Bayes", "Decision Tree", "KNN", "Random Forest"];
 
 export const MODEL_COLOR: Record<ModelName, string> = {
   "Naive Bayes": "var(--model-nb)",
   "Decision Tree": "var(--model-dt)",
   KNN: "var(--model-knn)",
+  "Random Forest": "var(--model-rf)",
 };
 
 export const MODEL_BLURB: Record<ModelName, string> = {
   "Naive Bayes": "Treats each reading as independent evidence and weighs the odds per crop.",
   "Decision Tree": "Asks a chain of yes/no questions about the field, like a seasoned agronomist.",
   KNN: "Finds the most similar fields in the dataset and goes with the neighbours.",
+  "Random Forest": "Combines 100 decision trees, each voting independently for the best crop.",
 };
 
 export interface FeatureMeta {
